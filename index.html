@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi Notes on C Major Scale</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.3.1/decimal.min.js"></script>
+</head>
+<body>
+    <script>
+       const twelfthRootOfTwo = Math.pow(2, 1/12);
+				//const baseFrequency = 261.63; // Frequency for middle C
+				const baseFrequency = 256.87; // Frequency for middle C
+
+				// Major scale: W-W-H-W-W-W-H
+				const majorScale = [0, 2, 4, 5, 7, 9, 11, 12].map(n => baseFrequency * Math.pow(twelfthRootOfTwo, n));
+
+				// Natural Minor scale: W-H-W-W-H-W-W
+				const naturalMinorScale = [0, 2, 3, 5, 7, 8, 10, 12].map(n => baseFrequency * Math.pow(twelfthRootOfTwo, n));
+
+				// Pentatonic scale: W-W-W+H-W-W+H
+				const pentatonicScale = [0, 2, 4, 7, 9, 12].map(n => baseFrequency * Math.pow(twelfthRootOfTwo, n));
+
+				// Blues scale: M3-m2-M2-m2-m3-M2
+				const bluesScale = [0, 3, 5, 6, 7, 10, 12].map(n => baseFrequency * Math.pow(twelfthRootOfTwo, n));
+
+				// Dorian scale: W-H-W-W-W-H-W
+				const dorianScale = [0, 2, 3, 5, 7, 9, 10, 12].map(n => baseFrequency * Math.pow(twelfthRootOfTwo, n));
+
+				// Mixolydian scale: W-W-H-W-W-H-W
+				const mixolydianScale = [0, 2, 4, 5, 7, 9, 10, 12].map(n => baseFrequency * Math.pow(twelfthRootOfTwo, n));
+
+				// Whole tone scale: W-W-W-W-W-W
+				const wholeToneScale = [0, 2, 4, 6, 8, 10, 12].map(n => baseFrequency * Math.pow(twelfthRootOfTwo, n));
+
+				// Chromatic scale: 12 consecutive semitones
+				const chromaticScale = Array.from({length: 13}, (_, i) => baseFrequency * Math.pow(twelfthRootOfTwo, i));
+
+				// Melodic minor scale (ascending): W-H-W-W-W-W-H
+				const melodicMinorScaleAscending = [0, 2, 3, 5, 7, 9, 11, 12].map(n => baseFrequency * Math.pow(twelfthRootOfTwo, n));
+
+				// Harmonic minor scale: W-H-W-W-H-W+H-H
+				const harmonicMinorScale = [0, 2, 3, 5, 7, 8, 11, 12].map(n => baseFrequency * Math.pow(twelfthRootOfTwo, n));
+
+				// fibonaci scale:
+				const fibonaciScale = [0, 1, 1, 2, 3, 5, 7, 12].map(n => baseFrequency * Math.pow(twelfthRootOfTwo, n));
+				 
+
+				const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        function playNote(frequency, duration) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.value = frequency;
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + 0.01);
+            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.8);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+       function chudnovskyAlgorithm(digits) {
+					Decimal.config({ precision: digits + 2 });
+					const C = new Decimal(426880).times(new Decimal(10005).sqrt());
+					let M = new Decimal(1);
+					let L = new Decimal(13591409);
+					let X = new Decimal(1);
+					let K = new Decimal(6);
+					let S = L;
+					const ITERATIONS = Math.ceil(digits / 14);
+
+					for (let i = 1; i <= ITERATIONS; i++) {
+							M = M.times(K.pow(3).minus(16 * K));
+							L = L.plus(545140134);
+							X = X.times(-262537412640768000);
+							K = K.plus(12);
+							let T = M.times(L).dividedBy(X);
+							S = S.plus(T);
+					}
+
+					return C.dividedBy(S).toDecimalPlaces(digits);
+			}
+ 
+
+        function playPiNotes(digits) {
+            const pi = chudnovskyAlgorithm(digits);
+            const piDigits = pi.toString().replace('.', '');
+						//const scale = solfeggioScale;
+						const scale = fibonaciScale;
+
+            for (let i = 0; i < piDigits.length; i++) {
+							const digit = parseInt(piDigits[i]);
+							const note = scale[digit % scale.length];
+							const duration = i * digit * 100;
+
+							setTimeout(() => {
+									playNote(note, duration);
+							}, duration);
+            }
+        }
+
+				window.addEventListener('DOMContentLoaded', () => {
+					document.querySelector('button').addEventListener('click', (e) => {
+						e.preventDefault();
+						console.log('clicked');
+						playPiNotes(1000);
+					});
+				});
+    </script>
+		<center><button>Play</button></center>
+</body>
+</html>
+
